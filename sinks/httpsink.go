@@ -136,20 +136,20 @@ func (h *HTTPSink) drainEvents(events []EventData) {
 			return
 		}
 		req, err := http.NewRequest("POST", h.SinkURL, h.bodyBuf)
-	if err != nil {
-		glog.Warningf(err.Error())
-		return
-	}
+		if err != nil {
+			glog.Warningf(err.Error())
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := h.httpClient.Do(req)
+		if err != nil {
+			glog.Warningf(err.Error())
+			return
+		}
 
-	resp, err := h.httpClient.Do(req)
-	if err != nil {
-		glog.Warningf(err.Error())
-		return
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		glog.Warningf("Got HTTP code %v from %v", resp.StatusCode, h.SinkURL)
-	}
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			glog.Warningf("Got HTTP code %v from %v", resp.StatusCode, h.SinkURL)
+		}
 
 	}
 

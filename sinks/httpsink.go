@@ -128,22 +128,14 @@ loop:
 // for each call, truncating it each time to avoid extra memory allocations.
 func (h *HTTPSink) drainEvents(events []EventData) {
 	// Reuse the body buffer for each request
-	h.bodyBuf.Truncate(0)
-
-	var written int64
 	for _, evt := range events {
-		w, err := evt.WriteRFC5424(h.bodyBuf)
-		written += w
+		h.bodyBuf.Truncate(0)
+		w, err := evt.WriteFlattenedJSON(h.bodyBuf)
 		if err != nil {
 			glog.Warningf("Could not write to event request body (wrote %v) bytes: %v", written, err)
 			return
 		}
-
-		h.bodyBuf.Write([]byte{'\n'})
-		written++
-	}
-
-	req, err := http.NewRequest("POST", h.SinkURL, h.bodyBuf)
+		req, err := http.NewRequest("POST", h.SinkURL, h.bodyBuf)
 	if err != nil {
 		glog.Warningf(err.Error())
 		return
@@ -158,4 +150,8 @@ func (h *HTTPSink) drainEvents(events []EventData) {
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		glog.Warningf("Got HTTP code %v from %v", resp.StatusCode, h.SinkURL)
 	}
+
+	}
+
+	
 }
